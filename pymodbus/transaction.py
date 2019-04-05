@@ -61,7 +61,8 @@ class ModbusTransactionManager(object):
         """
         self.tid = Defaults.TransactionId
         self.client = client
-        self.retry_on_empty = kwargs.get('retry_on_empty', Defaults.RetryOnEmpty)
+        self.retry_on_empty = kwargs.get(
+            'retry_on_empty', Defaults.RetryOnEmpty)
         self.retries = kwargs.get('retries', Defaults.Retries) or 1
         self._transaction_lock = RLock()
         self._no_response_devices = []
@@ -95,7 +96,7 @@ class ModbusTransactionManager(object):
             return self.base_adu_size + 2  # Fcode(1), ExcecptionCode(1)
         elif isinstance(self.client.framer, ModbusAsciiFramer):
             return self.base_adu_size + 4  # Fcode(2), ExcecptionCode(2)
-        elif isinstance(self.client.framer, (ModbusRtuFramer, 
+        elif isinstance(self.client.framer, (ModbusRtuFramer,
                                              ModbusBinaryFramer)):
             return self.base_adu_size + 2  # Fcode(1), ExcecptionCode(1)
 
@@ -112,10 +113,12 @@ class ModbusTransactionManager(object):
                 )
                 retries = self.retries
                 request.transaction_id = self.getNextTID()
-                _logger.debug("Running transaction %d" % request.transaction_id)
+                _logger.debug("Running transaction %d" %
+                              request.transaction_id)
                 _buffer = hexlify_packets(self.client.framer._buffer)
                 if _buffer:
-                    _logger.debug("Clearing current Frame : - {}".format(_buffer))
+                    _logger.debug(
+                        "Clearing current Frame : - {}".format(_buffer))
                     self.client.framer.resetFrame()
 
                 expected_response_length = None
@@ -125,7 +128,8 @@ class ModbusTransactionManager(object):
                         if isinstance(self.client.framer, ModbusAsciiFramer):
                             response_pdu_size = response_pdu_size * 2
                         if response_pdu_size:
-                            expected_response_length = self._calculate_response_length(response_pdu_size)
+                            expected_response_length = self._calculate_response_length(
+                                response_pdu_size)
                 if request.unit_id in self._no_response_devices:
                     full = True
                 else:
@@ -277,9 +281,10 @@ class ModbusTransactionManager(object):
         result = read_min + result
         actual = len(result)
         if total is not None and actual != total:
-            _logger.debug("Incomplete message received, "
-                          "Expected {} bytes Recieved "
-                          "{} bytes !!!!".format(total, actual))
+            raise InvalidMessageReceivedException(
+                "Incomplete message received, expected %d bytes Recieved "
+                "%d bytes !!!!" % (total, actual)
+            )
         if self.client.state != ModbusTransactionState.PROCESSING_REPLY:
             _logger.debug("Changing transaction state from "
                           "'WAITING FOR REPLY' to 'PROCESSING REPLY'")
@@ -434,11 +439,13 @@ class FifoTransactionManager(ModbusTransactionManager):
         :param tid: The transaction to remove
         """
         _logger.debug("Deleting transaction %d" % tid)
-        if self.transactions: self.transactions.pop(0)
+        if self.transactions:
+            self.transactions.pop(0)
 
 # --------------------------------------------------------------------------- #
 # Exported symbols
 # --------------------------------------------------------------------------- #
+
 
 __all__ = [
     "FifoTransactionManager",
